@@ -1,0 +1,20 @@
+Attribute VB_Name = "modConstants"
+Option Explicit
+
+Public Const SH_CONFIG As String = "CONFIG"
+Public Const SH_VEHICULES As String = "VEHICULES"
+Public Const SH_CLIENTS As String = "CLIENTS"
+Public Const SH_LOCATIONS As String = "LOCATIONS"
+Public Const SH_PAIEMENTS As String = "PAIEMENTS"
+Public Const SH_ENTRETIEN As String = "ENTRETIEN"
+Public Const SH_RECHERCHE As String = "RECHERCHE"
+Public Const SH_DASHBOARD As String = "DASHBOARD"
+Public Const SH_FORM_CLIENT As String = "FORM_CLIENT"
+Public Const SH_FORM_VEHICULE As String = "FORM_VEHICULE"
+Public Const SH_FORM_LOCATION As String = "FORM_LOCATION"
+
+Public Const TB_VEHICULES As String = "T_Vehicules"
+Public Const TB_CLIENTS As String = "T_Clients"
+Public Const TB_LOCATIONS As String = "T_Locations"
+Public Const TB_PAIEMENTS As String = "T_Paiements"
+Public Const TB_ENTRETIEN As String = "T_Entretien"
