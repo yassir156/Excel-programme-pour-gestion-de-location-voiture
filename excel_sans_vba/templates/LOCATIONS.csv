@@ -1,0 +1,1 @@
+LocationID,NumeroContrat,ClientID,VehiculeID,DateDebut,DateFinPrevue,DateRetourReelle,NbJours,PrixJourDH,RemisePctManuelle,RemisePctAuto,RemisePctFinale,MontantBrut,MontantRemise,MontantNet,TotalPaye,ResteAPayer,Statut,EtatDepart,EtatRetour,DateCreation
