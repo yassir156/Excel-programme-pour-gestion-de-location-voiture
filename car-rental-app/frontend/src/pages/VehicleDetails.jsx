@@ -11,9 +11,13 @@ export default function VehicleDetails() {
   const navigate = useNavigate();
   const [vehicle, setVehicle] = useState(null);
   const [history, setHistory] = useState({ reservations: [], maintenances: [] });
+  const [activePhoto, setActivePhoto] = useState(0);
 
   useEffect(() => {
-    api.get(`/vehicles/${id}`).then((res) => setVehicle(res.data));
+    api.get(`/vehicles/${id}`).then((res) => {
+      setVehicle(res.data);
+      setActivePhoto(0);
+    });
     api.get(`/vehicles/${id}/history`).then((res) => setHistory(res.data));
   }, [id]);
 
@@ -38,8 +42,30 @@ export default function VehicleDetails() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="card space-y-4 p-6 lg:col-span-1">
-          {vehicle.photos?.[0] ? (
-            <img src={`${uploadsBaseUrl}${vehicle.photos[0]}`} alt="" className="h-48 w-full rounded-xl object-cover" />
+          {vehicle.photos?.length > 0 ? (
+            <>
+              <img
+                src={`${uploadsBaseUrl}${vehicle.photos[activePhoto] || vehicle.photos[0]}`}
+                alt=""
+                className="h-48 w-full rounded-xl object-cover"
+              />
+              {vehicle.photos.length > 1 && (
+                <div className="flex flex-wrap gap-2">
+                  {vehicle.photos.map((p, i) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setActivePhoto(i)}
+                      className={`h-14 w-14 overflow-hidden rounded-lg border-2 ${
+                        i === activePhoto ? 'border-brand-500' : 'border-transparent'
+                      }`}
+                    >
+                      <img src={`${uploadsBaseUrl}${p}`} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex h-48 items-center justify-center rounded-xl bg-slate-100 text-slate-400 dark:bg-navy-700">
               Aucune photo

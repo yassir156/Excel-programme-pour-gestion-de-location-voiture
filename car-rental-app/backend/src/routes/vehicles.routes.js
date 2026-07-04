@@ -1,8 +1,9 @@
 const express = require('express');
+const fs = require('fs');
 const { Op } = require('sequelize');
 const { Vehicle, Reservation, Client, Maintenance } = require('../models');
 const { authenticate, authorize } = require('../middleware/auth');
-const { upload } = require('../uploads');
+const { upload, uploadsDir } = require('../uploads');
 const path = require('path');
 
 const router = express.Router();
@@ -101,6 +102,22 @@ router.post('/:id/photos', authorize('administrateur', 'manager', 'agent'), uplo
     const newPhotos = (req.files || []).map((f) => `/uploads/${path.basename(f.path)}`);
     vehicle.photos = [...vehicle.photos, ...newPhotos];
     await vehicle.save();
+    res.json(vehicle);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/:id/photos', authorize('administrateur', 'manager', 'agent'), async (req, res, next) => {
+  try {
+    const { photo } = req.body;
+    if (!photo) return res.status(400).json({ message: 'Photo à supprimer non spécifiée.' });
+    const vehicle = await Vehicle.findByPk(req.params.id);
+    if (!vehicle) return res.status(404).json({ message: 'Véhicule introuvable.' });
+    vehicle.photos = vehicle.photos.filter((p) => p !== photo);
+    await vehicle.save();
+    const filePath = path.join(uploadsDir, path.basename(photo));
+    fs.unlink(filePath, () => {});
     res.json(vehicle);
   } catch (err) {
     next(err);

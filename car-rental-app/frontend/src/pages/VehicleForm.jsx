@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, Upload, X } from 'lucide-react';
+import { Save, Upload, X, Trash2 } from 'lucide-react';
 import api, { getErrorMessage, uploadsBaseUrl } from '../api/client';
 import PageHeader from '../components/PageHeader';
 
@@ -20,6 +20,9 @@ export default function VehicleForm() {
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deletingPhoto, setDeletingPhoto] = useState(null);
+
+  const filePreviews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -83,6 +86,22 @@ export default function VehicleForm() {
       setSubmitError(getErrorMessage(err, "Impossible d'enregistrer le véhicule."));
     } finally {
       setSaving(false);
+    }
+  }
+
+  function removePendingFile(index) {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function deleteUploadedPhoto(photo) {
+    setDeletingPhoto(photo);
+    try {
+      const res = await api.delete(`/vehicles/${id}/photos`, { data: { photo } });
+      setPhotos(res.data.photos || []);
+    } catch (err) {
+      setSubmitError(getErrorMessage(err, 'Impossible de supprimer cette photo.'));
+    } finally {
+      setDeletingPhoto(null);
     }
   }
 
@@ -153,18 +172,56 @@ export default function VehicleForm() {
 
         <div>
           <label className="label">Photos du véhicule</label>
+
           {photos.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-2">
+            <div className="mb-3 flex flex-wrap gap-3">
               {photos.map((p, i) => (
-                <img key={i} src={`${uploadsBaseUrl}${p}`} alt="" className="h-16 w-16 rounded-lg object-cover" />
+                <div key={i} className="group relative h-20 w-20">
+                  <img src={`${uploadsBaseUrl}${p}`} alt="" className="h-20 w-20 rounded-lg object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => deleteUploadedPhoto(p)}
+                    disabled={deletingPhoto === p}
+                    className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white opacity-0 shadow transition-opacity group-hover:opacity-100 disabled:opacity-70"
+                    title="Supprimer cette photo"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
               ))}
             </div>
           )}
+
+          {files.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-3">
+              {files.map((f, i) => (
+                <div key={i} className="group relative h-20 w-20">
+                  <img src={filePreviews[i]} alt="" className="h-20 w-20 rounded-lg border-2 border-dashed border-brand-300 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removePendingFile(i)}
+                    className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white opacity-0 shadow transition-opacity group-hover:opacity-100"
+                    title="Retirer cette photo"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <label className="flex w-fit cursor-pointer items-center gap-2 rounded-lg border border-dashed border-slate-300 px-4 py-2 text-sm text-slate-500 hover:bg-slate-50 dark:border-navy-600 dark:hover:bg-navy-900">
             <Upload size={16} />
-            {files.length > 0 ? `${files.length} fichier(s) sélectionné(s)` : 'Ajouter des photos'}
-            <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => setFiles(Array.from(e.target.files))} />
+            {isEdit ? 'Ajouter des photos' : 'Ajouter des photos (envoyées après création)'}
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => setFiles((prev) => [...prev, ...Array.from(e.target.files)])}
+            />
           </label>
+          <p className="mt-1 text-xs text-slate-400">Formats acceptés : JPG, PNG. 8 photos maximum par envoi.</p>
         </div>
 
         <div className="flex justify-end gap-3 border-t border-slate-100 pt-4 dark:border-navy-700">
