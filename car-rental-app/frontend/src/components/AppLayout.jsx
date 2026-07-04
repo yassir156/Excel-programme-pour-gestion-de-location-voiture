@@ -26,7 +26,7 @@ const titleRules = [
 
 function getTitle(pathname) {
   const rule = titleRules.find((r) => r.test(pathname));
-  return rule ? rule.title : 'Car Rental Manager';
+  return rule ? rule.title : 'Nova Motion Car';
 }
 
 export default function AppLayout() {

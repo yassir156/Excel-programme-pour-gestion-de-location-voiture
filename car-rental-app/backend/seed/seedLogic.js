@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const bcrypt = require('bcryptjs');
 const {
   initDatabase,
@@ -12,6 +14,16 @@ const {
   AgencySettings,
 } = require('../src/models');
 const { generateNumber } = require('../src/utils/numbering');
+const { uploadsDir } = require('../src/uploads');
+
+function seedDefaultLogo() {
+  const source = path.join(__dirname, '..', 'assets', 'logo.png');
+  const target = path.join(uploadsDir, 'nova-motion-car-logo.png');
+  if (fs.existsSync(source) && !fs.existsSync(target)) {
+    fs.copyFileSync(source, target);
+  }
+  return '/uploads/nova-motion-car-logo.png';
+}
 
 function daysFromNow(n) {
   const d = new Date();
@@ -36,12 +48,13 @@ async function seedDemoData() {
   let settings = await AgencySettings.findOne();
   if (!settings) settings = await AgencySettings.create({});
   await settings.update({
-    name: 'AutoLoc Premium',
+    name: 'Nova Motion Car',
     address: '12 Avenue Mohammed V, Casablanca',
     phone: '+212 522 00 00 00',
-    email: 'contact@autoloc-premium.ma',
+    email: 'contact@novamotioncar.ma',
     currency: 'MAD',
     taxRate: 20,
+    logo: settings.logo || seedDefaultLogo(),
   });
 
   const vehicleCount = await Vehicle.count();

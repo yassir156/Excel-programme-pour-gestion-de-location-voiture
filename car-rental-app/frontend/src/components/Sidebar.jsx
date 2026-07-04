@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import logo from '../assets/logo.png';
 
 const links = [
   { to: '/', label: 'Tableau de bord', icon: LayoutDashboard, end: true },
@@ -32,13 +33,11 @@ export default function Sidebar() {
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white dark:border-navy-700 dark:bg-navy-900 md:flex">
-      <div className="flex items-center gap-2 px-5 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white shadow-soft">
-          <Car size={18} />
-        </div>
+      <div className="flex items-center gap-2.5 px-5 py-5">
+        <img src={logo} alt="Nova Motion Car" className="h-10 w-10 shrink-0 rounded-full object-cover shadow-soft" />
         <div>
-          <p className="text-sm font-bold leading-none text-slate-800 dark:text-white">AutoLoc</p>
-          <p className="text-xs text-slate-400">Gestion de location</p>
+          <p className="text-sm font-bold leading-none text-slate-800 dark:text-white">NOVA MOTION CAR</p>
+          <p className="text-xs text-slate-400">Drive with confidence</p>
         </div>
       </div>
 
@@ -79,7 +78,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="border-t border-slate-100 px-5 py-4 text-xs text-slate-400 dark:border-navy-700">
-        Car Rental Manager v1.0
+        Nova Motion Car v1.0
       </div>
     </aside>
   );

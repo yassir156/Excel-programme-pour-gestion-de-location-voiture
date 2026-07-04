@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { Car, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Lock, User, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getErrorMessage } from '../api/client';
+import logo from '../assets/logo.png';
 
 export default function Login() {
   const { user, login } = useAuth();
@@ -37,21 +38,19 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-navy-950 via-navy-900 to-brand-900 p-4">
       <div className="grid w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-navy-800 md:grid-cols-2">
         <div className="hidden flex-col justify-between bg-gradient-to-br from-brand-700 to-navy-900 p-10 text-white md:flex">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
-              <Car size={22} />
-            </div>
-            <span className="text-lg font-bold">AutoLoc Manager</span>
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="Nova Motion Car" className="h-12 w-12 rounded-full object-cover shadow-lg" />
+            <span className="text-lg font-bold tracking-wide">NOVA MOTION CAR</span>
           </div>
           <div>
             <h2 className="text-2xl font-bold leading-snug">
               Gérez votre flotte, vos clients et vos réservations en toute simplicité.
             </h2>
             <p className="mt-3 text-sm text-white/70">
-              Une plateforme complète pour piloter votre agence de location de voitures.
+              Drive with confidence — la plateforme complète pour piloter votre agence de location de voitures.
             </p>
           </div>
-          <p className="text-xs text-white/50">© {new Date().getFullYear()} AutoLoc Manager</p>
+          <p className="text-xs text-white/50">© {new Date().getFullYear()} Nova Motion Car</p>
         </div>
 
         <div className="p-8 sm:p-10">

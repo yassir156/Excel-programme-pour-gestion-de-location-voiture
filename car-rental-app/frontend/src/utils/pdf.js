@@ -1,40 +1,71 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
+import logoUrl from '../assets/logo.png';
 
 const METHOD_LABELS = { especes: 'Espèces', carte: 'Carte bancaire', virement: 'Virement', cheque: 'Chèque' };
 
-function drawHeader(doc, settings, title) {
+let cachedLogoDataUrl = null;
+
+async function getLogoDataUrl() {
+  if (cachedLogoDataUrl) return cachedLogoDataUrl;
+  try {
+    const res = await fetch(logoUrl);
+    const blob = await res.blob();
+    cachedLogoDataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    cachedLogoDataUrl = null;
+  }
+  return cachedLogoDataUrl;
+}
+
+async function drawHeader(doc, settings, title) {
   doc.setFillColor(15, 23, 42);
-  doc.rect(0, 0, 210, 28, 'F');
+  doc.rect(0, 0, 210, 30, 'F');
+
+  const logoDataUrl = await getLogoDataUrl();
+  const textX = logoDataUrl ? 30 : 14;
+  if (logoDataUrl) {
+    try {
+      doc.addImage(logoDataUrl, 'PNG', 12, 6, 18, 18);
+    } catch {
+      // ignore logo rendering issues, header text still renders
+    }
+  }
+
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text(settings?.name || 'Agence de Location', 14, 13);
+  doc.text(settings?.name || 'Nova Motion Car', textX, 15);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.text(
     [settings?.address, settings?.phone, settings?.email].filter(Boolean).join(' · '),
-    14,
-    20
+    textX,
+    22
   );
   doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
-  doc.text(title, 196, 16, { align: 'right' });
+  doc.text(title, 196, 17, { align: 'right' });
   doc.setTextColor(0, 0, 0);
 }
 
-export function generateContractPDF(contract, settings) {
+export async function generateContractPDF(contract, settings) {
   const doc = new jsPDF();
   const currency = settings?.currency || 'MAD';
-  drawHeader(doc, settings, 'CONTRAT DE LOCATION');
+  await drawHeader(doc, settings, 'CONTRAT DE LOCATION');
 
   doc.setFontSize(10);
-  doc.text(`Contrat N° : ${contract.contractNumber}`, 14, 38);
-  doc.text(`Date d'émission : ${format(new Date(contract.createdAt || Date.now()), 'dd/MM/yyyy')}`, 14, 44);
+  doc.text(`Contrat N° : ${contract.contractNumber}`, 14, 40);
+  doc.text(`Date d'émission : ${format(new Date(contract.createdAt || Date.now()), 'dd/MM/yyyy')}`, 14, 46);
 
   autoTable(doc, {
-    startY: 52,
+    startY: 54,
     head: [['Informations client', '']],
     body: [
       ['Nom complet', `${contract.client?.firstName} ${contract.client?.lastName}`],
@@ -89,17 +120,17 @@ export function generateContractPDF(contract, settings) {
   doc.save(`contrat-${contract.contractNumber}.pdf`);
 }
 
-export function generateReceiptPDF(payment, settings) {
+export async function generateReceiptPDF(payment, settings) {
   const doc = new jsPDF();
   const currency = settings?.currency || 'MAD';
-  drawHeader(doc, settings, 'REÇU DE PAIEMENT');
+  await drawHeader(doc, settings, 'REÇU DE PAIEMENT');
 
   doc.setFontSize(10);
-  doc.text(`Reçu N° : ${payment.receiptNumber}`, 14, 38);
-  doc.text(`Date : ${format(new Date(payment.paidAt || Date.now()), 'dd/MM/yyyy HH:mm')}`, 14, 44);
+  doc.text(`Reçu N° : ${payment.receiptNumber}`, 14, 40);
+  doc.text(`Date : ${format(new Date(payment.paidAt || Date.now()), 'dd/MM/yyyy HH:mm')}`, 14, 46);
 
   autoTable(doc, {
-    startY: 52,
+    startY: 54,
     body: [
       ['Client', `${payment.client?.firstName} ${payment.client?.lastName}`],
       ['Véhicule', payment.reservation?.vehicle ? `${payment.reservation.vehicle.brand} ${payment.reservation.vehicle.model}` : '—'],
