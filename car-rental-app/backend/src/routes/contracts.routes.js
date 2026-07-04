@@ -2,6 +2,7 @@ const express = require('express');
 const { Contract, Reservation, Client, Vehicle, AgencySettings } = require('../models');
 const { authenticate, authorize } = require('../middleware/auth');
 const { generateNumber } = require('../utils/numbering');
+const { syncVehicleStatus } = require('../services/reservationService');
 
 const router = express.Router();
 router.use(authenticate);
@@ -60,10 +61,7 @@ router.post('/from-reservation/:reservationId', authorize('administrateur', 'man
       reservation.status = 'confirmee';
       await reservation.save();
     }
-    if (reservation.vehicle) {
-      reservation.vehicle.status = 'louee';
-      await reservation.vehicle.save();
-    }
+    await syncVehicleStatus(reservation.vehicleId);
 
     const full = await Contract.findByPk(contract.id, { include: includeAll });
     res.status(201).json(full);

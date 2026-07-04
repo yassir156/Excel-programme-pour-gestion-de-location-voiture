@@ -1,6 +1,7 @@
 const express = require('express');
 const { Return, Reservation, Vehicle, Client } = require('../models');
 const { authenticate, authorize } = require('../middleware/auth');
+const { syncVehicleStatus } = require('../services/reservationService');
 
 const router = express.Router();
 router.use(authenticate);
@@ -66,10 +67,10 @@ router.post('/', authorize('administrateur', 'manager', 'agent'), async (req, re
     await reservation.save();
 
     if (reservation.vehicle) {
-      reservation.vehicle.status = 'disponible';
       reservation.vehicle.mileage = Math.max(reservation.vehicle.mileage, Number(mileageReturn));
       await reservation.vehicle.save();
     }
+    await syncVehicleStatus(reservation.vehicleId);
 
     const full = await Return.findByPk(ret.id, {
       include: [{ model: Vehicle, as: 'vehicle' }, { model: Reservation, as: 'reservation' }],

@@ -2,7 +2,7 @@ const express = require('express');
 const { Op } = require('sequelize');
 const { Reservation, Client, Vehicle } = require('../models');
 const { authenticate, authorize } = require('../middleware/auth');
-const { isVehicleAvailable, computePrice } = require('../services/reservationService');
+const { isVehicleAvailable, computePrice, syncVehicleStatus } = require('../services/reservationService');
 
 const router = express.Router();
 router.use(authenticate);
@@ -76,6 +76,7 @@ router.post('/', authorize('administrateur', 'manager', 'agent'), async (req, re
       notes,
       status: 'en_attente',
     });
+    await syncVehicleStatus(vehicleId);
     const full = await Reservation.findByPk(reservation.id, { include: includeAll });
     res.status(201).json(full);
   } catch (err) {
@@ -87,6 +88,7 @@ router.put('/:id', authorize('administrateur', 'manager', 'agent'), async (req, 
   try {
     const reservation = await Reservation.findByPk(req.params.id);
     if (!reservation) return res.status(404).json({ message: 'Réservation introuvable.' });
+    const previousVehicleId = reservation.vehicleId;
     const { vehicleId, startDate, endDate, notes, status } = req.body;
     const nextVehicleId = vehicleId || reservation.vehicleId;
     const nextStart = startDate || reservation.startDate;
@@ -110,6 +112,10 @@ router.put('/:id', authorize('administrateur', 'manager', 'agent'), async (req, 
     if (notes !== undefined) reservation.notes = notes;
     if (status !== undefined) reservation.status = status;
     await reservation.save();
+    await syncVehicleStatus(reservation.vehicleId);
+    if (previousVehicleId !== reservation.vehicleId) {
+      await syncVehicleStatus(previousVehicleId);
+    }
     const full = await Reservation.findByPk(reservation.id, { include: includeAll });
     res.json(full);
   } catch (err) {
@@ -123,6 +129,7 @@ router.post('/:id/cancel', authorize('administrateur', 'manager', 'agent'), asyn
     if (!reservation) return res.status(404).json({ message: 'Réservation introuvable.' });
     reservation.status = 'annulee';
     await reservation.save();
+    await syncVehicleStatus(reservation.vehicleId);
     res.json(reservation);
   } catch (err) {
     next(err);
@@ -133,7 +140,9 @@ router.delete('/:id', authorize('administrateur', 'manager'), async (req, res, n
   try {
     const reservation = await Reservation.findByPk(req.params.id);
     if (!reservation) return res.status(404).json({ message: 'Réservation introuvable.' });
+    const { vehicleId } = reservation;
     await reservation.destroy();
+    await syncVehicleStatus(vehicleId);
     res.json({ message: 'Réservation supprimée.' });
   } catch (err) {
     next(err);

@@ -34,4 +34,45 @@ async function computePrice(vehicleId, startDate, endDate) {
   return { days, totalPrice, vehicle };
 }
 
-module.exports = { isVehicleAvailable, computePrice, diffInDays, ACTIVE_STATUSES };
+/**
+ * Recomputes a vehicle's status from its reservations so it never gets stuck
+ * on "louee"/"reservee" after a cancellation, deletion or return. A manual
+ * "maintenance" status always takes priority and is left untouched.
+ */
+async function syncVehicleStatus(vehicleId) {
+  const vehicle = await Vehicle.findByPk(vehicleId);
+  if (!vehicle || vehicle.status === 'maintenance') return vehicle;
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const activeNow = await Reservation.findOne({
+    where: {
+      vehicleId,
+      status: { [Op.in]: ACTIVE_STATUSES },
+      startDate: { [Op.lte]: todayStr },
+      endDate: { [Op.gte]: todayStr },
+    },
+  });
+
+  let nextStatus;
+  if (activeNow) {
+    nextStatus = 'louee';
+  } else {
+    const upcoming = await Reservation.findOne({
+      where: {
+        vehicleId,
+        status: { [Op.in]: ACTIVE_STATUSES },
+        startDate: { [Op.gt]: todayStr },
+      },
+    });
+    nextStatus = upcoming ? 'reservee' : 'disponible';
+  }
+
+  if (vehicle.status !== nextStatus) {
+    vehicle.status = nextStatus;
+    await vehicle.save();
+  }
+  return vehicle;
+}
+
+module.exports = { isVehicleAvailable, computePrice, diffInDays, syncVehicleStatus, ACTIVE_STATUSES };
