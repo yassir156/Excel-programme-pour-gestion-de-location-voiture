@@ -95,15 +95,37 @@ npm run backend:seed
 ## Générer l'exécutable Windows (.exe)
 
 ```bash
-npm run frontend:build   # build de production du frontend React
-npm run dist              # génère l'installeur Windows (.exe) via electron-builder
+npm install                # installe les dépendances (recompile sqlite3 pour Electron via postinstall)
+npm run frontend:install
+npm run dist                # génère l'installeur Windows (.exe) via electron-builder
 ```
 
 L'installeur NSIS est généré dans le dossier `release/`. Il permet à l'utilisateur de choisir le dossier d'installation et crée des raccourcis Bureau / Menu Démarrer.
 
-> **Remarque** : la génération d'un `.exe` signé nécessite d'exécuter `electron-builder` sur Windows (ou avec Wine sur Linux/macOS pour la génération croisée). Sur Linux, utilisez `npm run dist:linux` pour générer un AppImage de test ; sur macOS, `npm run dist:mac`.
+Le module natif `sqlite3` est recompilé spécifiquement pour la version d'Electron embarquée (et non pour la version de Node.js du système) via le script `postinstall` (`electron-rebuild -f -w sqlite3`). C'est indispensable : un `sqlite3` compilé pour Node.js ne fonctionne pas forcément à l'identique une fois embarqué dans Electron.
 
-Le module natif `sqlite3` est automatiquement recompilé pour la version d'Electron utilisée via le script `postinstall` (`electron-builder install-app-deps`).
+### Génération croisée (Linux/macOS → Windows) et environnements à accès réseau restreint
+
+La génération d'un `.exe` doit idéalement être faite sur Windows (ou via CI, voir plus bas), car la recompilation native de `sqlite3` pour Windows depuis Linux/macOS nécessite une chaîne de compilation croisée (MinGW) non garantie. Sur une machine avec un accès Internet normal, `npm install` télécharge directement les binaires nécessaires (Electron, sqlite3, outils NSIS) depuis GitHub sans configuration supplémentaire.
+
+Si votre réseau bloque les téléchargements depuis `github.com` (proxy d'entreprise, etc.), vous pouvez rediriger ces téléchargements vers le miroir npmmirror :
+
+```bash
+export ELECTRON_MIRROR="https://cdn.npmmirror.com/binaries/electron/"
+export ELECTRON_BUILDER_BINARIES_MIRROR="https://cdn.npmmirror.com/binaries/electron-builder-binaries/"
+npm install
+npm run dist
+```
+
+### Génération automatique via GitHub Actions (recommandé)
+
+Le dépôt contient un workflow prêt à l'emploi : `.github/workflows/build-windows.yml`. Il compile l'application sur une vraie machine Windows hébergée par GitHub et produit l'installeur `.exe` en tant qu'artefact téléchargeable, sans rien installer localement.
+
+Pour l'utiliser :
+1. Poussez le dépôt sur GitHub (ou ouvrez l'onglet **Actions** s'il y est déjà).
+2. Sélectionnez le workflow **Build Windows executable (Nova Motion Car)**.
+3. Cliquez sur **Run workflow** (ou poussez un changement dans `car-rental-app/`).
+4. Une fois le job terminé, téléchargez l'artefact `nova-motion-car-windows-installer` : il contient le fichier `.exe`.
 
 ## Sauvegarde et restauration
 

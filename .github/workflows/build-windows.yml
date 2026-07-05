@@ -1,0 +1,40 @@
+name: Build Windows executable (Nova Motion Car)
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - 'car-rental-app/**'
+      - '.github/workflows/build-windows.yml'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: car-rental-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install root dependencies (backend + Electron)
+        run: npm install
+
+      - name: Install frontend dependencies
+        run: npm run frontend:install
+
+      - name: Build the Windows installer (.exe)
+        run: npm run dist
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-motion-car-windows-installer
+          path: car-rental-app/release/*.exe
+          if-no-files-found: error

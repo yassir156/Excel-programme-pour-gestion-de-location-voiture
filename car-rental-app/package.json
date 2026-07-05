@@ -7,7 +7,7 @@
   "main": "electron/main.js",
   "private": true,
   "scripts": {
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "electron-rebuild -f -w sqlite3",
     "frontend:install": "npm install --prefix frontend",
     "frontend:dev": "npm run dev --prefix frontend",
     "frontend:build": "npm run build --prefix frontend",
@@ -29,6 +29,7 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.1.0",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "electron": "^31.0.2",
@@ -38,6 +39,7 @@
   "build": {
     "appId": "com.novamotioncar.manager",
     "productName": "Nova Motion Car",
+    "publish": null,
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -57,7 +59,12 @@
     "win": {
       "icon": "build/icon.ico",
       "target": [
-        { "target": "nsis", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
     },
     "nsis": {
@@ -69,11 +76,15 @@
     },
     "linux": {
       "icon": "build/icon.png",
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "category": "Office"
     },
     "mac": {
-      "target": ["dmg"]
+      "target": [
+        "dmg"
+      ]
     }
   }
 }
